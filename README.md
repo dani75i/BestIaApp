@@ -10,6 +10,7 @@ Un annuaire d'outils d'intelligence artificielle en français, conçu pour déco
 - Des favoris pour retrouver ses outils.
 - Des notes personnelles de 1 à 5 étoiles.
 - Une interface responsive, adaptée aux petits et grands écrans.
+- Un mode clair/sombre : suit le thème de l’appareil par défaut, puis conserve votre choix dans ce navigateur via le bouton soleil/lune.
 
 Les favoris et les notes sont enregistrés dans le navigateur avec `localStorage`, sans compte utilisateur. Ils restent sur le même navigateur et la même adresse du site : les données de la version locale et du site publié sont distinctes. Effacer les données du navigateur efface aussi ces préférences. Les notes ne représentent pas une moyenne publique des visiteurs.
 

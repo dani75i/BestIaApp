@@ -26,6 +26,7 @@ import {
   PenLine,
 } from "lucide-react";
 import { categories, tools } from "./data/tools.js";
+import ThemeToggle from "./ThemeToggle.jsx";
 import {
   pricingLabels,
   sanitizePreferences,
@@ -404,17 +405,21 @@ export default function App() {
               <ArrowUpRight size={13} />
             </button>
           </nav>
-          <button
-            className={`header-favorites ${favoritesOnly ? "selected" : ""}`}
-            onClick={() => navigate(!favoritesOnly)}
-            aria-pressed={favoritesOnly}
-          >
-            <Heart size={17} />
-            <span>Mes favoris</span>
-            <span className="favorites-count">
-              {preferences.favorites.length}
-            </span>
-          </button>
+          <div className="header-actions">
+            <ThemeToggle />
+            <button
+              className={`header-favorites ${favoritesOnly ? "selected" : ""}`}
+              aria-label="Mes favoris"
+              onClick={() => navigate(!favoritesOnly)}
+              aria-pressed={favoritesOnly}
+            >
+              <Heart size={17} />
+              <span>Mes favoris</span>
+              <span className="favorites-count">
+                {preferences.favorites.length}
+              </span>
+            </button>
+          </div>
         </div>
       </header>
       <main>

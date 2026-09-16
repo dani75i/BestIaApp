@@ -1,0 +1,302 @@
+.header-actions {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  margin-left: auto;
+}
+.header-actions .header-favorites {
+  margin-left: 0;
+}
+.theme-toggle {
+  display: grid;
+  place-items: center;
+  width: 42px;
+  height: 42px;
+  flex-shrink: 0;
+  border: 1px solid var(--line);
+  border-radius: 9px;
+  background: white;
+  color: #766080;
+}
+.theme-toggle:hover {
+  background: #f2edff;
+  color: var(--purple);
+}
+
+:root[data-theme="dark"] {
+  color: #eeebf5;
+  background: #14131b;
+  --purple: #bda5ff;
+  --purple-dark: #d1beff;
+  --muted: #b7adc7;
+  --line: #363044;
+  --dark-surface: #1e1b29;
+  --dark-raised: #282333;
+  --dark-muted: #b7adc7;
+}
+[data-theme="dark"] .site-header {
+  background: #18151ff0;
+}
+[data-theme="dark"]
+  :is(
+    .header-favorites,
+    .theme-toggle,
+    .search-box,
+    .select-wrap,
+    .category-button,
+    .tool-card,
+    .floating-tool,
+    .modal,
+    .skip-link
+  ) {
+  background: var(--dark-surface);
+  color: #eeebf5;
+  border-color: var(--line);
+}
+[data-theme="dark"]
+  :is(
+    .hero-description,
+    .section-heading p,
+    .tool-description,
+    .detail-description,
+    .card-title > span,
+    .hero-proof,
+    .hero-proof strong,
+    .rating-label,
+    .results-count,
+    .results-count strong,
+    .sort-control,
+    .sort-control select,
+    .section-eyebrow,
+    .selection-note,
+    .catalogue-footnote,
+    .footer-caption,
+    .site-footer p,
+    .site-footer > button,
+    .local-note,
+    .detail-header > div > p:last-child,
+    .detail-pricing p,
+    .keyword,
+    .detail-rating > p,
+    .source-note,
+    .about-item p,
+    .empty-state p,
+    .eyebrow,
+    .art-center > span,
+    .art-caption,
+    .nav-link,
+    .select-wrap select,
+    .icon-button
+  ) {
+  color: var(--dark-muted);
+}
+[data-theme="dark"] :is(.nav-link.active, .brand-dot, .source-note a) {
+  color: var(--purple);
+}
+[data-theme="dark"] :is(.brand-mark, .primary-button) {
+  background: #7856d9;
+  color: white;
+}
+[data-theme="dark"] .primary-button:hover {
+  background: #8663e4;
+}
+[data-theme="dark"]
+  :is(
+    .theme-toggle:hover,
+    .header-favorites:hover,
+    .header-favorites.selected,
+    .category-button.active,
+    .view-toggle button.active,
+    .secondary-button.saved,
+    .favorite-button:hover,
+    .visit-link:hover
+  ) {
+  background: #352946;
+  color: #d0b6ff;
+  border-color: #665082;
+}
+[data-theme="dark"]
+  :is(
+    .favorites-count,
+    .category-button > span,
+    .category-button.active > span
+  ) {
+  background: #3c3050;
+  color: #d7c1f7;
+}
+[data-theme="dark"]
+  :is(.search-box input, .modal h2, .modal h3, .empty-state h3) {
+  color: #eeebf5;
+}
+[data-theme="dark"] .search-box input::placeholder {
+  color: #aa9dbb;
+}
+[data-theme="dark"]
+  :is(
+    kbd,
+    .view-toggle,
+    .detail-pricing,
+    .secondary-button,
+    .discovery-banner button
+  ) {
+  background: var(--dark-raised);
+  color: #cbb6e6;
+  border-color: #463850;
+}
+[data-theme="dark"] select option {
+  background: var(--dark-surface);
+  color: #eeebf5;
+}
+[data-theme="dark"] .search-box:focus-within {
+  border-color: #af87ed;
+}
+[data-theme="dark"] .tool-card:hover {
+  border-color: #79628c;
+  box-shadow: 0 7px 24px #0003;
+}
+[data-theme="dark"] :is(.card-bottom, .detail-rating, .keyword) {
+  border-color: var(--line);
+}
+[data-theme="dark"] .tool-logo {
+  background: #f0ebf6;
+  border-color: #eee6f7;
+}
+[data-theme="dark"] .mini-logos .tool-logo {
+  border-color: #14131b;
+}
+[data-theme="dark"] .category-tag {
+  background: #352941;
+  color: #d4b5f6;
+}
+[data-theme="dark"] .category-code {
+  background: #253349;
+  color: #a9c9f2;
+}
+[data-theme="dark"] .category-texte {
+  background: #203b30;
+  color: #a5d8b8;
+}
+[data-theme="dark"] .category-image {
+  background: #432b3a;
+  color: #e9b3cc;
+}
+[data-theme="dark"] .category-video {
+  background: #413526;
+  color: #e5c38c;
+}
+[data-theme="dark"] .category-musique {
+  background: #40293e;
+  color: #e4afe2;
+}
+[data-theme="dark"] .category-presentations {
+  background: #373922;
+  color: #d1d59c;
+}
+[data-theme="dark"] .price-tag {
+  background: #293a2c;
+  color: #b1d3a8;
+}
+[data-theme="dark"] .price-paid {
+  background: #3d3426;
+  color: #dec597;
+}
+[data-theme="dark"] .price-free {
+  background: #203b30;
+  color: #98d5ac;
+}
+[data-theme="dark"] :is(.favorite-button, .visit-link, .rating-stars button) {
+  color: #b19bc7;
+}
+[data-theme="dark"] .favorite-button.is-favorite {
+  color: #d0a3f0;
+}
+[data-theme="dark"] .favorite-button.is-favorite svg {
+  fill: #68417f;
+}
+[data-theme="dark"]
+  :is(.rating-stars button.rated, .rating-stars button:hover, .rating-value) {
+  color: #f0c16e;
+}
+[data-theme="dark"] .rating-stars button.rated svg {
+  fill: #bd8737;
+}
+[data-theme="dark"] :is(.discovery-banner, .empty-state) {
+  background: #231d30;
+  border-color: #41324f;
+}
+[data-theme="dark"] .discovery-banner h2 {
+  color: #e0c9f1;
+}
+[data-theme="dark"] .discovery-banner p {
+  color: #bba3cc;
+}
+[data-theme="dark"] :is(.banner-icon, .about-icon, .empty-state > svg) {
+  background: #3a2b4b;
+  color: #c5a6e2;
+  border-color: #554066;
+}
+[data-theme="dark"] .banner-spark {
+  color: #42314f;
+}
+[data-theme="dark"] .discovery-banner button:hover {
+  background: #392946;
+}
+[data-theme="dark"] .modal::backdrop {
+  background: #08060cb3;
+}
+[data-theme="dark"] .storage-warning {
+  color: #f0d38f;
+  background: #40341d;
+}
+[data-theme="dark"] .toast {
+  background: #32243f;
+  border-color: #6b4d84;
+}
+[data-theme="dark"] .hero-emphasis svg {
+  stroke: #796199;
+}
+[data-theme="dark"] .art-glow {
+  background: radial-gradient(
+    ellipse,
+    #56347755,
+    #2d204333 45%,
+    transparent 70%
+  );
+}
+[data-theme="dark"] .orbit {
+  border-color: #3b2e4b;
+}
+[data-theme="dark"] .art-center > svg {
+  background: #3a265266;
+  border-color: #64458188;
+  box-shadow: 0 10px 38px #0002;
+}
+[data-theme="dark"] .live-dot {
+  box-shadow: 0 0 0 4px #2f233f;
+}
+
+@media (max-width: 640px) {
+  .header-inner {
+    gap: 14px;
+  }
+  .header-actions {
+    gap: 6px;
+  }
+  .theme-toggle {
+    width: 38px;
+    height: 38px;
+  }
+}
+@media (max-width: 480px) {
+  .header-favorites > span:not(.favorites-count) {
+    display: none;
+  }
+  .header-favorites {
+    min-height: 38px;
+  }
+}
+@media (max-width: 360px) {
+  .header-inner nav {
+    display: none;
+  }
+}
