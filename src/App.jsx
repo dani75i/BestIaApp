@@ -27,6 +27,10 @@ import {
 } from "lucide-react";
 import { categories, tools } from "./data/tools.js";
 import ThemeToggle from "./ThemeToggle.jsx";
+import useVotes from "./useVotes.js";
+import ToolDetail from "./ToolDetail.jsx";
+import FeedbackForm from "./FeedbackForm.jsx";
+import useToolRoute from "./useToolRoute.js";
 import {
   pricingLabels,
   sanitizePreferences,
@@ -91,14 +95,45 @@ function ToolLogo({ tool, large = false }) {
   );
 }
 
-function Rating({ tool, rating, onRate }) {
+function CommunityRating({ tool, summary, status }) {
+  return (
+    <div
+      className="community-rating"
+      aria-label={`Note moyenne de ${tool.name}`}
+    >
+      <Star size={14} aria-hidden="true" />
+      {status === "loading" ? (
+        <span>Chargement des notes…</span>
+      ) : status === "error" ? (
+        <span>Notes indisponibles</span>
+      ) : summary?.count > 0 ? (
+        <>
+          <strong>
+            {summary.average.toLocaleString("fr-FR", {
+              minimumFractionDigits: 1,
+              maximumFractionDigits: 1,
+            })}
+            <span> / 5</span>
+          </strong>
+          <span>
+            ({summary.count} vote{summary.count > 1 ? "s" : ""})
+          </span>
+        </>
+      ) : (
+        <span>Aucun vote pour le moment</span>
+      )}
+    </div>
+  );
+}
+
+function Rating({ tool, rating, onRate, disabled = false }) {
   return (
     <div
       className="rating"
       role="group"
       aria-label={`Votre note pour ${tool.name}`}
     >
-      <span className="rating-label">Ma note</span>
+      <span className="rating-label">Mon vote</span>
       <span className="rating-stars">
         {[1, 2, 3, 4, 5].map((value) => (
           <button
@@ -108,6 +143,7 @@ function Rating({ tool, rating, onRate }) {
             aria-pressed={value === rating}
             title={`${value}/5`}
             onClick={() => onRate(tool.id, value)}
+            disabled={disabled}
             className={value <= (rating || 0) ? "rated" : ""}
           >
             <Star size={15} />
@@ -119,20 +155,35 @@ function Rating({ tool, rating, onRate }) {
   );
 }
 
-function ToolCard({ tool, favorite, rating, onFavorite, onRate, onOpen }) {
+function ToolCard({
+  tool,
+  favorite,
+  rating,
+  summary,
+  voteStatus,
+  voting,
+  onFavorite,
+  onRate,
+  onOpen,
+}) {
   const mainCategory = categories.find(
     (category) => category.id === tool.categoryIds[0],
   );
   const CategoryIcon = categoryIcons[mainCategory?.id] || Sparkles;
   return (
-    <article className="tool-card">
+    <article
+      className="tool-card"
+      onClick={(event) => {
+        if (!event.target.closest("a, button, input, select")) onOpen(tool);
+      }}
+    >
       <div className="card-top">
         <ToolLogo tool={tool} />
         <div className="card-title">
-          <button className="tool-title" onClick={() => onOpen(tool)}>
+          <a className="tool-title" href={`#/outil/${tool.id}`}>
             {tool.name}
             <ArrowUpRight size={16} />
-          </button>
+          </a>
           <span>{tool.tagline}</span>
         </div>
         <button
@@ -157,7 +208,15 @@ function ToolCard({ tool, favorite, rating, onFavorite, onRate, onOpen }) {
         </span>
       </div>
       <div className="card-bottom">
-        <Rating tool={tool} rating={rating} onRate={onRate} />
+        <div className="card-rating-block">
+          <CommunityRating tool={tool} summary={summary} status={voteStatus} />
+          <Rating
+            tool={tool}
+            rating={rating}
+            onRate={onRate}
+            disabled={voting || voteStatus !== "ready"}
+          />
+        </div>
         <a
           className="visit-link"
           href={tool.url}
@@ -263,13 +322,15 @@ function HeroArt() {
 
 export default function App() {
   const [preferences, setPreferences] = useState(readPreferences);
+  const votes = useVotes();
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("all");
   const [pricing, setPricing] = useState("all");
   const [sort, setSort] = useState("selection");
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [view, setView] = useState("grid");
-  const [selectedTool, setSelectedTool] = useState(null);
+  const { selectedTool, isDetail, openTool } = useToolRoute(tools);
+  const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [toast, setToast] = useState("");
   const [storageError, setStorageError] = useState(false);
@@ -309,6 +370,9 @@ export default function App() {
       return () => clearTimeout(timer);
     }
   }, [toast]);
+  useEffect(() => {
+    if (votes.error) setToast(votes.error);
+  }, [votes.error]);
 
   const results = useMemo(
     () =>
@@ -319,8 +383,22 @@ export default function App() {
         sort,
         favoritesOnly,
         ...preferences,
+        ratings: Object.fromEntries(
+          Object.entries(votes.averages).map(([id, value]) => [
+            id,
+            value.average,
+          ]),
+        ),
       }),
-    [query, category, pricing, sort, favoritesOnly, preferences],
+    [
+      query,
+      category,
+      pricing,
+      sort,
+      favoritesOnly,
+      preferences,
+      votes.averages,
+    ],
   );
   const categoryCounts = useMemo(
     () =>
@@ -348,12 +426,12 @@ export default function App() {
       exists ? "Outil retiré de vos favoris" : "Outil ajouté à vos favoris",
     );
   };
-  const rateTool = (id, value) => {
-    setPreferences((previous) => ({
-      ...previous,
-      ratings: { ...previous.ratings, [id]: value },
-    }));
-    setToast("Votre note a été mise à jour");
+  const rateTool = async (id, value) => {
+    if (await votes.save(id, value))
+      setToast("Votre vote est enregistré dans la moyenne publique");
+  };
+  const removeVote = async (id) => {
+    if (await votes.save(id, null)) setToast("Votre vote a été supprimé");
   };
   const resetFilters = () => {
     setQuery("");
@@ -362,6 +440,7 @@ export default function App() {
     setSort("selection");
   };
   const navigate = (favorites) => {
+    if (isDetail) location.hash = "/";
     setFavoritesOnly(favorites);
     resetFilters();
     catalogueRef.current?.scrollIntoView({ block: "start" });
@@ -372,7 +451,16 @@ export default function App() {
 
   return (
     <>
-      <a className="skip-link" href="#catalogue">
+      <a
+        className="skip-link"
+        href={isDetail ? "#detail-title" : "#catalogue"}
+        onClick={(event) => {
+          if (isDetail) {
+            event.preventDefault();
+            document.getElementById("detail-title")?.focus();
+          }
+        }}
+      >
         Aller au catalogue
       </a>
       <header className="site-header">
@@ -383,6 +471,7 @@ export default function App() {
             aria-label="BestIA, accueil"
             onClick={(event) => {
               event.preventDefault();
+              location.hash = "/";
               setFavoritesOnly(false);
               resetFilters();
               window.scrollTo({ top: 0, behavior: "smooth" });
@@ -423,302 +512,424 @@ export default function App() {
         </div>
       </header>
       <main>
-        {!favoritesOnly && (
-          <section className="hero page-width">
-            <div className="hero-copy">
-              <div className="eyebrow">
-                <span className="live-dot" />
-                L’INTELLIGENCE ARTIFICIELLE, SIMPLEMENT
-              </div>
-              <h1>
-                La bonne IA.
-                <br />
-                Pour toutes{" "}
-                <span className="hero-emphasis">
-                  vos idées.
-                  <svg viewBox="0 0 340 16" preserveAspectRatio="none">
-                    <path d="M3 11 Q160 -1 337 8" />
-                  </svg>
-                </span>
+        {isDetail ? (
+          selectedTool ? (
+            <ToolDetail
+              key={selectedTool.id}
+              tool={selectedTool}
+              tools={tools}
+              logo={<ToolLogo tool={selectedTool} large />}
+              actions={
+                <>
+                  {" "}
+                  <div className="detail-actions">
+                    <a
+                      className="primary-button"
+                      href={selectedTool.url}
+                      target="_blank"
+                      rel="noopener noreferrer"
+                    >
+                      Découvrir {selectedTool.name}
+                      <ExternalLink size={16} />
+                    </a>
+                    <button
+                      className={`secondary-button ${preferences.favorites.includes(selectedTool.id) ? "saved" : ""}`}
+                      onClick={() => toggleFavorite(selectedTool.id)}
+                    >
+                      <Heart size={17} />
+                      {preferences.favorites.includes(selectedTool.id)
+                        ? "Dans mes favoris"
+                        : "Garder en favori"}
+                    </button>
+                  </div>
+                </>
+              }
+              ratingPanel={
+                <>
+                  {" "}
+                  <div className="detail-rating">
+                    <CommunityRating
+                      tool={selectedTool}
+                      summary={votes.averages[selectedTool.id]}
+                      status={votes.status}
+                    />
+                    <Rating
+                      tool={selectedTool}
+                      rating={votes.myVotes[selectedTool.id]}
+                      onRate={rateTool}
+                      disabled={votes.pending || votes.status !== "ready"}
+                    />
+                    {votes.myVotes[selectedTool.id] && (
+                      <button
+                        className="reset-link"
+                        onClick={() => removeVote(selectedTool.id)}
+                        disabled={votes.pending}
+                      >
+                        Supprimer mon vote
+                      </button>
+                    )}
+                    <p>
+                      La moyenne inclut les votes de tous les visiteurs et reste
+                      disponible sur chaque appareil. Votre vote peut être
+                      modifié depuis ce navigateur.
+                    </p>
+                    {!votes.myVotes[selectedTool.id] &&
+                      preferences.ratings[selectedTool.id] && (
+                        <p>
+                          Votre ancienne note personnelle :{" "}
+                          {preferences.ratings[selectedTool.id]}/5. Cliquez sur
+                          une étoile pour la publier dans la moyenne.
+                        </p>
+                      )}
+                    {votes.error && <p role="alert">{votes.error}</p>}
+                  </div>
+                  {votes.status === "error" && (
+                    <button
+                      className="secondary-button"
+                      onClick={votes.refresh}
+                    >
+                      Réessayer
+                    </button>
+                  )}
+                </>
+              }
+            />
+          ) : (
+            <section className="tool-page page-width">
+              <h1 id="detail-title" tabIndex={-1}>
+                Outil introuvable
               </h1>
-              <p className="hero-description">
-                Écrire, créer, coder… Découvrez les outils qui vous
-                <br className="desktop-break" /> simplifient la vie. Trouvez
-                celui qui vous ressemble.
-              </p>
-              <button
-                className="primary-button hero-button"
-                onClick={() =>
-                  catalogueRef.current?.scrollIntoView({ block: "start" })
-                }
-              >
-                Trouver mon outil
-                <ArrowDown size={17} />
-              </button>
-              <div className="hero-proof">
-                <div className="mini-logos">
-                  {tools
-                    .filter((tool) =>
-                      ["ChatGPT", "Claude", "Gamma"].includes(tool.name),
-                    )
-                    .slice(0, 3)
-                    .map((tool) => (
-                      <ToolLogo tool={tool} key={tool.id} />
-                    ))}
+              <p>Cette fiche n’existe pas dans le catalogue.</p>
+              <a className="primary-button" href="#/">
+                Retour au catalogue
+              </a>
+            </section>
+          )
+        ) : (
+          <>
+            {!favoritesOnly && (
+              <section className="hero page-width">
+                <div className="hero-copy">
+                  <div className="eyebrow">
+                    <span className="live-dot" />
+                    L’INTELLIGENCE ARTIFICIELLE, SIMPLEMENT
+                  </div>
+                  <h1>
+                    La bonne IA.
+                    <br />
+                    Pour toutes{" "}
+                    <span className="hero-emphasis">
+                      vos idées.
+                      <svg viewBox="0 0 340 16" preserveAspectRatio="none">
+                        <path d="M3 11 Q160 -1 337 8" />
+                      </svg>
+                    </span>
+                  </h1>
+                  <p className="hero-description">
+                    Écrire, créer, coder… Découvrez les outils qui vous
+                    <br className="desktop-break" /> simplifient la vie. Trouvez
+                    celui qui vous ressemble.
+                  </p>
+                  <button
+                    className="primary-button hero-button"
+                    onClick={() =>
+                      catalogueRef.current?.scrollIntoView({ block: "start" })
+                    }
+                  >
+                    Trouver mon outil
+                    <ArrowDown size={17} />
+                  </button>
+                  <div className="hero-proof">
+                    <div className="mini-logos">
+                      {tools
+                        .filter((tool) =>
+                          ["ChatGPT", "Claude", "Gamma"].includes(tool.name),
+                        )
+                        .slice(0, 3)
+                        .map((tool) => (
+                          <ToolLogo tool={tool} key={tool.id} />
+                        ))}
+                    </div>
+                    <span>
+                      <strong>{tools.length} outils sélectionnés</strong>
+                      <span className="proof-dot">·</span>Des possibilités
+                      infinies
+                    </span>
+                  </div>
                 </div>
-                <span>
-                  <strong>{tools.length} outils sélectionnés</strong>
-                  <span className="proof-dot">·</span>Des possibilités infinies
+                <HeroArt />
+              </section>
+            )}
+            <section
+              id="catalogue"
+              ref={catalogueRef}
+              className={`catalogue page-width ${favoritesOnly ? "favorites-page" : ""}`}
+              aria-labelledby="catalogue-title"
+            >
+              <div className="section-heading">
+                <div>
+                  <div className="section-eyebrow">
+                    {favoritesOnly ? "VOTRE SÉLECTION" : "LE CATALOGUE"}
+                  </div>
+                  <h2 id="catalogue-title">
+                    {favoritesOnly
+                      ? "Vos meilleures trouvailles."
+                      : "Explorez les possibilités."}
+                  </h2>
+                  <p>
+                    {favoritesOnly
+                      ? "Tous vos outils préférés, réunis au même endroit."
+                      : "Une idée en tête ? Il y a une IA pour ça."}
+                  </p>
+                </div>
+                <span className="selection-note">
+                  <Sparkles size={15} />
+                  Sélection faite avec soin
                 </span>
               </div>
-            </div>
-            <HeroArt />
-          </section>
-        )}
-        <section
-          id="catalogue"
-          ref={catalogueRef}
-          className={`catalogue page-width ${favoritesOnly ? "favorites-page" : ""}`}
-          aria-labelledby="catalogue-title"
-        >
-          <div className="section-heading">
-            <div>
-              <div className="section-eyebrow">
-                {favoritesOnly ? "VOTRE SÉLECTION" : "LE CATALOGUE"}
+              {favoritesOnly && (
+                <p className="local-note">
+                  <Bookmark size={15} />
+                  Vos favoris restent dans ce navigateur. Les notes moyennes
+                  sont partagées entre tous les visiteurs.
+                </p>
+              )}
+              <div className="search-row">
+                <div className="search-box">
+                  <Search size={21} />
+                  <input
+                    ref={searchRef}
+                    type="search"
+                    aria-label="Rechercher une intelligence artificielle"
+                    placeholder="Un outil, une envie, un besoin…"
+                    value={query}
+                    onChange={(event) => setQuery(event.target.value)}
+                  />
+                  {query ? (
+                    <button
+                      aria-label="Effacer la recherche"
+                      className="icon-button"
+                      onClick={() => {
+                        setQuery("");
+                        searchRef.current?.focus();
+                      }}
+                    >
+                      <X size={17} />
+                    </button>
+                  ) : (
+                    <kbd>Ctrl K</kbd>
+                  )}
+                </div>
+                <div className="select-wrap price-filter">
+                  <SlidersHorizontal size={17} />
+                  <select
+                    aria-label="Filtrer par prix"
+                    value={pricing}
+                    onChange={(event) => setPricing(event.target.value)}
+                  >
+                    <option value="all">Tous les prix</option>
+                    <option value="free">Gratuit</option>
+                    <option value="freemium">Freemium</option>
+                    <option value="paid">Payant</option>
+                  </select>
+                  <ChevronDown size={15} />
+                </div>
               </div>
-              <h2 id="catalogue-title">
-                {favoritesOnly
-                  ? "Vos meilleures trouvailles."
-                  : "Explorez les possibilités."}
-              </h2>
-              <p>
-                {favoritesOnly
-                  ? "Tous vos outils préférés, réunis au même endroit."
-                  : "Une idée en tête ? Il y a une IA pour ça."}
-              </p>
-            </div>
-            <span className="selection-note">
-              <Sparkles size={15} />
-              Sélection faite avec soin
-            </span>
-          </div>
-          {favoritesOnly && (
-            <p className="local-note">
-              <Bookmark size={15} />
-              Vos favoris et notes sont conservés dans ce navigateur, sans
-              compte.
-            </p>
-          )}
-          <div className="search-row">
-            <div className="search-box">
-              <Search size={21} />
-              <input
-                ref={searchRef}
-                type="search"
-                aria-label="Rechercher une intelligence artificielle"
-                placeholder="Un outil, une envie, un besoin…"
-                value={query}
-                onChange={(event) => setQuery(event.target.value)}
-              />
-              {query ? (
-                <button
-                  aria-label="Effacer la recherche"
-                  className="icon-button"
-                  onClick={() => {
-                    setQuery("");
-                    searchRef.current?.focus();
-                  }}
-                >
-                  <X size={17} />
-                </button>
-              ) : (
-                <kbd>Ctrl K</kbd>
-              )}
-            </div>
-            <div className="select-wrap price-filter">
-              <SlidersHorizontal size={17} />
-              <select
-                aria-label="Filtrer par prix"
-                value={pricing}
-                onChange={(event) => setPricing(event.target.value)}
-              >
-                <option value="all">Tous les prix</option>
-                <option value="free">Gratuit</option>
-                <option value="freemium">Freemium</option>
-                <option value="paid">Payant</option>
-              </select>
-              <ChevronDown size={15} />
-            </div>
-          </div>
-          <div
-            className="category-filters"
-            role="group"
-            aria-label="Filtrer par catégorie"
-          >
-            <button
-              className={`category-button ${category === "all" ? "active" : ""}`}
-              onClick={() => setCategory("all")}
-              aria-pressed={category === "all"}
-            >
-              <LayoutGrid size={16} />
-              Tout explorer
-              <span>
-                {favoritesOnly ? preferences.favorites.length : tools.length}
-              </span>
-            </button>
-            {categories.map((item) => {
-              const Icon = categoryIcons[item.id] || Sparkles;
-              return (
-                <button
-                  key={item.id}
-                  className={`category-button ${category === item.id ? "active" : ""}`}
-                  onClick={() => setCategory(item.id)}
-                  aria-pressed={category === item.id}
-                >
-                  <Icon size={16} />
-                  {item.label}
-                  <span>{categoryCounts[item.id]}</span>
-                </button>
-              );
-            })}
-          </div>
-          <div className="results-toolbar">
-            <div className="results-count" role="status" aria-live="polite">
-              <strong>{results.length}</strong> outil
-              {results.length !== 1 ? "s" : ""}{" "}
-              {favoritesOnly ? "dans vos favoris" : "à découvrir"}
-              {filtersActive && (
-                <button onClick={resetFilters} className="reset-link">
-                  Effacer les filtres
-                  <X size={12} />
-                </button>
-              )}
-            </div>
-            <div className="results-options">
-              <label className="sort-control">
-                <span>Trier par :</span>
-                <select
-                  aria-label="Trier les outils"
-                  value={sort}
-                  onChange={(event) => setSort(event.target.value)}
-                >
-                  <option value="selection">Notre sélection</option>
-                  <option value="name">Nom : A à Z</option>
-                  <option value="rating">Mes meilleures notes</option>
-                </select>
-                <ChevronDown size={13} />
-              </label>
               <div
-                className="view-toggle"
+                className="category-filters"
                 role="group"
-                aria-label="Mode d’affichage"
+                aria-label="Filtrer par catégorie"
               >
                 <button
-                  aria-label="Affichage en grille"
-                  aria-pressed={view === "grid"}
-                  className={view === "grid" ? "active" : ""}
-                  onClick={() => setView("grid")}
+                  className={`category-button ${category === "all" ? "active" : ""}`}
+                  onClick={() => setCategory("all")}
+                  aria-pressed={category === "all"}
                 >
                   <LayoutGrid size={16} />
+                  Tout explorer
+                  <span>
+                    {favoritesOnly
+                      ? preferences.favorites.length
+                      : tools.length}
+                  </span>
                 </button>
-                <button
-                  aria-label="Affichage en liste"
-                  aria-pressed={view === "list"}
-                  className={view === "list" ? "active" : ""}
-                  onClick={() => setView("list")}
-                >
-                  <List size={17} />
-                </button>
+                {categories.map((item) => {
+                  const Icon = categoryIcons[item.id] || Sparkles;
+                  return (
+                    <button
+                      key={item.id}
+                      className={`category-button ${category === item.id ? "active" : ""}`}
+                      onClick={() => setCategory(item.id)}
+                      aria-pressed={category === item.id}
+                    >
+                      <Icon size={16} />
+                      {item.label}
+                      <span>{categoryCounts[item.id]}</span>
+                    </button>
+                  );
+                })}
               </div>
-            </div>
-          </div>
-          {storageError && (
-            <p className="storage-warning" role="alert">
-              Votre navigateur bloque l’enregistrement. Vos favoris et notes
-              resteront disponibles jusqu’à la fermeture de cette page.
-            </p>
-          )}
-          {results.length ? (
-            <div className={`tools-grid ${view === "list" ? "list-view" : ""}`}>
-              {results.map((tool) => (
-                <ToolCard
-                  key={tool.id}
-                  tool={tool}
-                  favorite={preferences.favorites.includes(tool.id)}
-                  rating={preferences.ratings[tool.id]}
-                  onFavorite={toggleFavorite}
-                  onRate={rateTool}
-                  onOpen={setSelectedTool}
-                />
-              ))}
-            </div>
-          ) : (
-            <div className="empty-state">
-              {favoritesOnly && !preferences.favorites.length ? (
-                <Heart size={32} />
-              ) : (
-                <Search size={32} />
+              <div className="results-toolbar">
+                <div className="results-count" role="status" aria-live="polite">
+                  <strong>{results.length}</strong> outil
+                  {results.length !== 1 ? "s" : ""}{" "}
+                  {favoritesOnly ? "dans vos favoris" : "à découvrir"}
+                  {filtersActive && (
+                    <button onClick={resetFilters} className="reset-link">
+                      Effacer les filtres
+                      <X size={12} />
+                    </button>
+                  )}
+                </div>
+                <div className="results-options">
+                  <label className="sort-control">
+                    <span>Trier par :</span>
+                    <select
+                      aria-label="Trier les outils"
+                      value={sort}
+                      onChange={(event) => setSort(event.target.value)}
+                    >
+                      <option value="selection">Notre sélection</option>
+                      <option value="name">Nom : A à Z</option>
+                      <option value="rating">Les mieux notés</option>
+                    </select>
+                    <ChevronDown size={13} />
+                  </label>
+                  <div
+                    className="view-toggle"
+                    role="group"
+                    aria-label="Mode d’affichage"
+                  >
+                    <button
+                      aria-label="Affichage en grille"
+                      aria-pressed={view === "grid"}
+                      className={view === "grid" ? "active" : ""}
+                      onClick={() => setView("grid")}
+                    >
+                      <LayoutGrid size={16} />
+                    </button>
+                    <button
+                      aria-label="Affichage en liste"
+                      aria-pressed={view === "list"}
+                      className={view === "list" ? "active" : ""}
+                      onClick={() => setView("list")}
+                    >
+                      <List size={17} />
+                    </button>
+                  </div>
+                </div>
+              </div>
+              {storageError && (
+                <p className="storage-warning" role="alert">
+                  Votre navigateur bloque l’enregistrement. Vos favoris
+                  resteront disponibles jusqu’à la fermeture de cette page.
+                </p>
               )}
-              <h3>
-                {favoritesOnly && !preferences.favorites.length
-                  ? "Vos coups de cœur commencent ici."
-                  : "Aucun outil pour cette recherche."}
-              </h3>
-              <p>
-                {favoritesOnly && !preferences.favorites.length
-                  ? "Un clic sur le cœur d’un outil et vous le retrouverez ici."
-                  : "Essayez un autre mot-clé ou élargissez vos filtres."}
-              </p>
-              <button
-                className="primary-button"
-                onClick={() =>
-                  favoritesOnly && !preferences.favorites.length
-                    ? navigate(false)
-                    : resetFilters()
-                }
-              >
-                {favoritesOnly && !preferences.favorites.length
-                  ? "Explorer les outils"
-                  : "Réinitialiser les filtres"}
-                <ArrowRight size={16} />
+              {votes.status === "error" && (
+                <div className="votes-warning" role="status">
+                  <span>
+                    Les notes sont momentanément indisponibles. Vous pouvez
+                    continuer à explorer les outils.
+                  </span>
+                  <button onClick={votes.refresh}>Réessayer</button>
+                </div>
+              )}
+              {votes.error && (
+                <p className="votes-warning" role="alert">
+                  {votes.error}
+                </p>
+              )}
+              {results.length ? (
+                <div
+                  className={`tools-grid ${view === "list" ? "list-view" : ""}`}
+                >
+                  {results.map((tool) => (
+                    <ToolCard
+                      key={tool.id}
+                      tool={tool}
+                      favorite={preferences.favorites.includes(tool.id)}
+                      rating={votes.myVotes[tool.id]}
+                      summary={votes.averages[tool.id]}
+                      voteStatus={votes.status}
+                      voting={votes.pending}
+                      onFavorite={toggleFavorite}
+                      onRate={rateTool}
+                      onOpen={openTool}
+                    />
+                  ))}
+                </div>
+              ) : (
+                <div className="empty-state">
+                  {favoritesOnly && !preferences.favorites.length ? (
+                    <Heart size={32} />
+                  ) : (
+                    <Search size={32} />
+                  )}
+                  <h3>
+                    {favoritesOnly && !preferences.favorites.length
+                      ? "Vos coups de cœur commencent ici."
+                      : "Aucun outil pour cette recherche."}
+                  </h3>
+                  <p>
+                    {favoritesOnly && !preferences.favorites.length
+                      ? "Un clic sur le cœur d’un outil et vous le retrouverez ici."
+                      : "Essayez un autre mot-clé ou élargissez vos filtres."}
+                  </p>
+                  <button
+                    className="primary-button"
+                    onClick={() =>
+                      favoritesOnly && !preferences.favorites.length
+                        ? navigate(false)
+                        : resetFilters()
+                    }
+                  >
+                    {favoritesOnly && !preferences.favorites.length
+                      ? "Explorer les outils"
+                      : "Réinitialiser les filtres"}
+                    <ArrowRight size={16} />
+                  </button>
+                </div>
+              )}
+              {results.length > 0 && (
+                <p className="catalogue-footnote">
+                  Gratuit : accès sans abonnement. Freemium : accès gratuit
+                  limité et options payantes.
+                  <br />
+                  Les offres évoluent : consultez le site de l’outil pour
+                  connaître les conditions à jour.
+                </p>
+              )}
+            </section>
+            <section className="discovery-banner page-width">
+              <div className="banner-icon">
+                <WandSparkles size={27} />
+              </div>
+              <div>
+                <h2>Votre prochaine idée mérite le bon outil.</h2>
+                <p>
+                  Explorez, essayez, gardez vos favoris. Le plus dur, c’est de
+                  choisir.
+                </p>
+              </div>
+              <button onClick={() => setAboutOpen(true)}>
+                Découvrir BestIA
+                <ArrowUpRight size={17} />
               </button>
-            </div>
-          )}
-          {results.length > 0 && (
-            <p className="catalogue-footnote">
-              Gratuit : accès sans abonnement. Freemium : accès gratuit limité
-              et options payantes.
-              <br />
-              Les offres évoluent : consultez le site de l’outil pour connaître
-              les conditions à jour.
-            </p>
-          )}
-        </section>
-        <section className="discovery-banner page-width">
-          <div className="banner-icon">
-            <WandSparkles size={27} />
-          </div>
-          <div>
-            <h2>Votre prochaine idée mérite le bon outil.</h2>
-            <p>
-              Explorez, essayez, gardez vos favoris. Le plus dur, c’est de
-              choisir.
-            </p>
-          </div>
-          <button onClick={() => setAboutOpen(true)}>
-            Découvrir BestIA
-            <ArrowUpRight size={17} />
-          </button>
-          <span className="banner-spark" aria-hidden="true">
-            ✧
-          </span>
-        </section>
+              <span className="banner-spark" aria-hidden="true">
+                ✧
+              </span>
+            </section>
+          </>
+        )}
       </main>
       <footer className="site-footer page-width">
         <div>
           <Brand small />
           <p>Un peu d’IA. Beaucoup de possibilités.</p>
         </div>
+        <button onClick={() => setFeedbackOpen(true)}>
+          Donner mon avis <MessageCircle size={15} />
+        </button>
         <span className="footer-caption">
           Pensé pour les curieux. Fait pour tout le monde.
         </span>
@@ -739,98 +950,9 @@ export default function App() {
           </>
         )}
       </div>
-      {selectedTool && (
-        <Modal titleId="detail-title" onClose={() => setSelectedTool(null)}>
-          <div className="detail-header">
-            <ToolLogo tool={selectedTool} large />
-            <div>
-              <p className="section-eyebrow">À DÉCOUVRIR</p>
-              <h2 id="detail-title">{selectedTool.name}</h2>
-              <p>{selectedTool.tagline}</p>
-            </div>
-          </div>
-          <p className="detail-description">{selectedTool.description}</p>
-          <div className="detail-tags">
-            {selectedTool.categoryIds.map((id) => (
-              <span key={id} className={`category-tag category-${id}`}>
-                {categories.find((item) => item.id === id)?.label}
-              </span>
-            ))}
-          </div>
-          <div className="detail-pricing">
-            <span className={`price-tag price-${selectedTool.pricing}`}>
-              <span />
-              {pricingLabels[selectedTool.pricing]}
-            </span>
-            <p>{selectedTool.pricingNote}</p>
-          </div>
-          <h3>Pour vos envies de…</h3>
-          <div className="detail-tags">
-            {selectedTool.tags.map((tag) => (
-              <span className="keyword" key={tag}>
-                {tag}
-              </span>
-            ))}
-          </div>
-          <div className="detail-rating">
-            <Rating
-              tool={selectedTool}
-              rating={preferences.ratings[selectedTool.id]}
-              onRate={rateTool}
-            />
-            {preferences.ratings[selectedTool.id] && (
-              <button
-                className="reset-link"
-                onClick={() =>
-                  setPreferences((previous) => {
-                    const ratings = { ...previous.ratings };
-                    delete ratings[selectedTool.id];
-                    return { ...previous, ratings };
-                  })
-                }
-              >
-                Effacer ma note
-              </button>
-            )}
-            <p>Votre avis personnel, enregistré dans ce navigateur.</p>
-          </div>
-          <div className="detail-actions">
-            <a
-              className="primary-button"
-              href={selectedTool.url}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Découvrir {selectedTool.name}
-              <ExternalLink size={16} />
-            </a>
-            <button
-              className={`secondary-button ${preferences.favorites.includes(selectedTool.id) ? "saved" : ""}`}
-              onClick={() => toggleFavorite(selectedTool.id)}
-            >
-              <Heart size={17} />
-              {preferences.favorites.includes(selectedTool.id)
-                ? "Dans mes favoris"
-                : "Garder en favori"}
-            </button>
-          </div>
-          <p className="source-note">
-            Fiche vérifiée le{" "}
-            {new Date(`${selectedTool.checkedAt}T12:00:00`).toLocaleDateString(
-              "fr-FR",
-            )}{" "}
-            ·{" "}
-            <a
-              href={selectedTool.sourceUrl}
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Consulter la source officielle
-              <ArrowUpRight size={11} />
-            </a>
-            <br />
-            Les tarifs et les fonctionnalités peuvent évoluer.
-          </p>
+      {feedbackOpen && (
+        <Modal titleId="feedback-title" onClose={() => setFeedbackOpen(false)}>
+          <FeedbackForm />
         </Modal>
       )}
       {aboutOpen && (
@@ -861,9 +983,17 @@ export default function App() {
             <div>
               <h3>Gardez ce qui vous plaît</h3>
               <p>
-                Vos favoris et vos notes personnelles de 1 à 5 étoiles sont
-                enregistrés dans ce navigateur. Ils ne sont pas partagés entre
-                appareils et disparaissent si vous effacez les données du site.
+                Vos favoris restent dans ce navigateur. Les votes de 1 à 5
+                étoiles sont conservés dans une base partagée : leur moyenne et
+                leur nombre sont visibles sur tous les appareils, même après une
+                mise à jour du site. Les anciennes notes locales ne sont
+                publiées que si vous votez à nouveau.
+              </p>
+              <p>
+                Sans compte, votre identité de vote est liée à ce navigateur.
+                Vous pouvez modifier ou supprimer votre vote ici. Un autre
+                appareil ou l’effacement des données du navigateur crée une
+                nouvelle identité ; cela n’efface pas les votes déjà publiés.
               </p>
             </div>
           </div>

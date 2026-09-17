@@ -1,6 +1,6 @@
 // Sélection éditoriale initiale : les offres évoluent, consulter la source officielle.
 // « freemium » comprend un accès gratuit limité ; un simple essai reste « paid ».
-// Les notes sont personnelles et sont gérées par l'application, pas par ce catalogue.
+// Les notes publiques sont gérées par Supabase, pas par ce catalogue.
 export const categories = [
   {
     id: "assistants",
@@ -375,9 +375,9 @@ export const tools = [
     description:
       "Transformez une image ou un texte en courte vidéo et ajoutez des effets créatifs. Un outil pour expérimenter avec le mouvement et les transformations visuelles.",
     categoryIds: ["video"],
-    pricing: "freemium",
+    pricing: "paid",
     pricingNote:
-      "Crédits vidéo gratuits limités ; abonnements pour davantage de générations et de résolutions.",
+      "Compte Free sans crédits mensuels inclus ; achat de packs ou abonnement pour générer des contenus.",
     url: "https://pika.art/",
     color: "#9470cc",
     tags: ["Animation", "Effets vidéo", "Réseaux sociaux"],

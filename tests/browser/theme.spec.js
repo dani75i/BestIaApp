@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures.js";
 
 test("suit le thème système tant qu’aucun choix personnel n’est enregistré", async ({
   page,
@@ -22,12 +22,12 @@ test("conserve le mode sombre après rechargement et adapte les fiches", async (
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "dark");
-  await page.getByRole("button", { name: "ChatGPT", exact: true }).click();
-  await expect(page.getByRole("dialog")).toHaveCSS(
+  await page.getByRole("link", { name: "ChatGPT", exact: true }).click();
+  await expect(page.locator(".detail-panel").first()).toHaveCSS(
     "background-color",
     "rgb(30, 27, 41)",
   );
-  await page.keyboard.press("Escape");
+  await page.getByRole("link", { name: "Retour au catalogue" }).click();
   await page.getByRole("button", { name: "Activer le mode clair" }).click();
   await page.reload();
   await expect(page.locator("html")).toHaveAttribute("data-theme", "light");

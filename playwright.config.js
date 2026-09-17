@@ -5,14 +5,14 @@ export default defineConfig({
   fullyParallel: true,
   workers: 2,
   reporter: "list",
-  use: { baseURL: "http://127.0.0.1:5173", trace: "retain-on-failure" },
+  use: { baseURL: "http://127.0.0.1:5175", trace: "retain-on-failure" },
   projects: [
     { name: "desktop", use: { ...devices["Desktop Chrome"] } },
     { name: "mobile", use: { ...devices["Pixel 7"] } },
   ],
   webServer: {
-    command: "npm run dev",
-    url: "http://127.0.0.1:5173",
+    command: "npm run dev -- --port 5175 --strictPort",
+    url: "http://127.0.0.1:5175",
     reuseExistingServer: !process.env.CI,
   },
 });

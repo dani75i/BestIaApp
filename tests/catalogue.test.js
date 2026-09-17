@@ -2,6 +2,7 @@ import test from "node:test";
 import { existsSync } from "node:fs";
 import assert from "node:assert/strict";
 import { categories, tools } from "../src/data/tools.js";
+import { toolDetails } from "../src/data/toolDetails.js";
 import { selectTools, sanitizePreferences } from "../src/lib/catalogue.js";
 
 const examples = [
@@ -59,6 +60,17 @@ const examples = [
 
 const selectedIds = (options) =>
   selectTools(examples, options).map((tool) => tool.id);
+
+test("chaque outil possède une fiche complète avec un exemple distinct", () => {
+  assert.deepEqual(Object.keys(toolDetails).sort(), tools.map(t => t.id).sort());
+  assert.equal(new Set(Object.values(toolDetails).map(d => d.example)).size, tools.length);
+  for (const tool of tools) {
+    const detail = toolDetails[tool.id];
+    assert.ok(detail.audience.length > 20);
+    for (const field of ["uses", "pros", "cons"]) assert.ok(detail[field].length >= 2);
+    assert.equal(new URL(tool.sourceUrl).protocol, "https:");
+  }
+});
 
 test("la recherche ignore la casse, les accents et les espaces superflus", () => {
   assert.deepEqual(selectedIds({ query: "  RÉDACTION   ViDeO  " }), ["studio"]);
@@ -237,7 +249,10 @@ test("le catalogue contient 30 outils uniques et des fiches complètes utilisabl
     assert.match(tool.checkedAt, /^\d{4}-\d{2}-\d{2}$/);
     assert.match(tool.color, /^#[a-f0-9]{6}$/i);
     assert.match(tool.logoUrl, /^\.\/logos\/[a-z0-9-]+\.(svg|png|ico)$/);
-    assert.ok(existsSync(new URL(`../public/${tool.logoUrl}`, import.meta.url)), `${tool.id} : logo local absent`);
+    assert.ok(
+      existsSync(new URL(`../public/${tool.logoUrl}`, import.meta.url)),
+      `${tool.id} : logo local absent`,
+    );
     for (const field of ["url", "sourceUrl"]) {
       const url = new URL(tool[field]);
       assert.equal(url.protocol, "https:", `${tool.id}.${field}`);

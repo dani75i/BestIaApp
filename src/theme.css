@@ -274,6 +274,18 @@
 [data-theme="dark"] .live-dot {
   box-shadow: 0 0 0 4px #2f233f;
 }
+[data-theme="dark"] .community-rating {
+  color: #b7adc7;
+}
+[data-theme="dark"] .community-rating strong,
+[data-theme="dark"] .community-rating > svg {
+  color: #f0c16e;
+}
+[data-theme="dark"] .votes-warning {
+  background: #40341d;
+  color: #f0d38f;
+  border-color: #6d572c;
+}
 
 @media (max-width: 640px) {
   .header-inner {

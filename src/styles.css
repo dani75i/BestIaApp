@@ -2049,6 +2049,66 @@ kbd {
   min-width: 24px;
   min-height: 28px;
 }
+.card-rating-block {
+  display: flex;
+  flex-direction: column;
+  gap: 7px;
+  padding: 12px 0;
+  min-width: 0;
+}
+.community-rating {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  font-size: 10px;
+  color: #786581;
+}
+.community-rating > svg {
+  color: #aa7d2c;
+}
+.community-rating strong {
+  font-size: 12px;
+  color: #74531f;
+}
+.community-rating strong span {
+  font-size: 10px;
+  font-weight: 400;
+}
+.detail-rating .community-rating {
+  margin-bottom: 16px;
+}
+.votes-warning {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  background: #fff5e4;
+  border: 1px solid #ebd3a8;
+  color: #735520;
+  border-radius: 9px;
+  padding: 13px 16px;
+  font-size: 12px;
+  line-height: 1.6;
+  margin: 15px 0;
+}
+.votes-warning button {
+  color: inherit;
+  background: none;
+  text-decoration: underline;
+  white-space: nowrap;
+}
+.rating-stars button:disabled {
+  opacity: 0.45;
+}
+.list-view .card-bottom {
+  min-width: 174px;
+}
+@media (max-width: 640px) {
+  .tool-card .card-bottom {
+    height: auto;
+    min-height: 72px;
+  }
+}
 @media (max-width: 640px) {
   .tool-description {
     font-size: 13px;

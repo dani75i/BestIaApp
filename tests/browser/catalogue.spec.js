@@ -1,4 +1,4 @@
-import { test, expect } from "@playwright/test";
+import { test, expect } from "./fixtures.js";
 
 test("affiche le catalogue et combine recherche, catégorie et prix", async ({
   page,
@@ -41,6 +41,9 @@ test("conserve les favoris et notes après rechargement", async ({ page }) => {
   await page
     .getByRole("button", { name: "Noter Claude 4 sur 5", exact: true })
     .click();
+  await expect(
+    page.getByRole("button", { name: "Noter Claude 4 sur 5", exact: true }),
+  ).toHaveAttribute("aria-pressed", "true");
   await page.reload();
   await page.getByRole("button", { name: /Mes favoris/ }).click();
   await expect(page.locator(".tool-card")).toHaveCount(1);
@@ -66,9 +69,9 @@ test("ouvre une fiche accessible et permet de supprimer sa note", async ({
   await page
     .getByRole("button", { name: "Noter ChatGPT 5 sur 5", exact: true })
     .click();
-  const trigger = page.getByRole("button", { name: "ChatGPT", exact: true });
+  const trigger = page.getByRole("link", { name: "ChatGPT", exact: true });
   await trigger.click();
-  const dialog = page.getByRole("dialog");
+  const dialog = page.locator(".tool-page");
   await expect(dialog).toBeVisible();
   await expect(
     dialog.getByRole("heading", { name: "ChatGPT", exact: true }),
@@ -76,13 +79,13 @@ test("ouvre une fiche accessible et permet de supprimer sa note", async ({
   await expect(
     dialog.getByRole("link", { name: /Découvrir ChatGPT/ }),
   ).toHaveAttribute("href", "https://chatgpt.com/");
-  await dialog.getByRole("button", { name: "Effacer ma note" }).click();
+  await dialog.getByRole("button", { name: "Supprimer mon vote" }).click();
   await expect(
     dialog.getByRole("button", { name: "Noter ChatGPT 5 sur 5", exact: true }),
   ).toHaveAttribute("aria-pressed", "false");
-  await page.keyboard.press("Escape");
+  await page.getByRole("link", { name: "Retour au catalogue" }).click();
   await expect(dialog).toHaveCount(0);
-  await expect(trigger).toBeFocused();
+  await expect(trigger).toBeVisible();
 });
 
 test("résiste à des préférences invalides et au stockage bloqué", async ({
