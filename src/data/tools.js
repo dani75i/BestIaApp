@@ -1,7 +1,29 @@
 // Sélection éditoriale initiale : les offres évoluent, consulter la source officielle.
 // « freemium » comprend un accès gratuit limité ; un simple essai reste « paid ».
 // Les notes publiques sont gérées par Supabase, pas par ce catalogue.
+import { additionalTools } from "./additionalTools.js";
+import { practicalInfo } from "./practicalInfo.js";
 export const categories = [
+  {
+    id: "traduction",
+    label: "Traduction",
+    description: "Comprendre et écrire dans plusieurs langues.",
+  },
+  {
+    id: "voix",
+    label: "Voix & audio",
+    description: "Créer une voix off ou améliorer un enregistrement.",
+  },
+  {
+    id: "reunions",
+    label: "Réunions & transcription",
+    description: "Retrouver les échanges et les décisions.",
+  },
+  {
+    id: "documents",
+    label: "Documents & recherche",
+    description: "Explorer et synthétiser vos sources.",
+  },
   {
     id: "assistants",
     label: "Assistants IA",
@@ -41,6 +63,12 @@ export const categories = [
 
 // Copies locales des icônes des éditeurs : aucun appel tiers lors de l'affichage.
 const logoExtensions = {
+  quillbot: "png",
+  deepl: "svg",
+  notebooklm: "svg",
+  "adobe-podcast": "svg",
+  fathom: "png",
+  "remove-bg": "png",
   chatgpt: "png",
   claude: "ico",
   gemini: "png",
@@ -140,7 +168,7 @@ export const tools = [
   },
   {
     id: "mistral-vibe",
-    name: "Mistral Vibe",
+    name: "Mistral Vibe (Le Chat)",
     tagline: "L’assistant de Mistral AI",
     description:
       "Anciennement Le Chat, cet assistant aide à chercher des informations, créer des documents et travailler sur du code. Vous pouvez lui donner vos fichiers comme point de départ.",
@@ -536,9 +564,11 @@ export const tools = [
     tags: ["Diapositives", "PowerPoint", "Présenter"],
     sourceUrl: "https://www.presentations.ai/pricing",
   },
+  ...additionalTools,
 ].map((tool) => ({
   featured: false,
   checkedAt: "2026-09-15",
   ...tool,
-  logoUrl: `./logos/${tool.id}.${logoExtensions[tool.id]}`,
+  practical: practicalInfo[tool.id],
+  logoUrl: `./logos/${tool.id}.${logoExtensions[tool.id] || "ico"}`,
 }));

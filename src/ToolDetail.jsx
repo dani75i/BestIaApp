@@ -3,6 +3,8 @@ import { ArrowLeft, ArrowUpRight, Check, Copy, Share2 } from "lucide-react";
 import { categories } from "./data/tools.js";
 import { toolDetails, detailsCheckedAt } from "./data/toolDetails.js";
 import { pricingLabels } from "./lib/catalogue.js";
+import { languageLabels, accountLabels } from "./data/practicalInfo.js";
+import { exampleOutcomes } from "./data/exampleOutcomes.js";
 import "./details.css";
 
 export function CopyButton({ value, children }) {
@@ -123,6 +125,14 @@ export default function ToolDetail({
             <h2>Une idée pour votre premier essai</h2>
             <blockquote>{detail.example}</blockquote>
             <CopyButton value={detail.example}>Copier l’exemple</CopyButton>
+            <div className="example-outcome">
+              <h3>Résultat visé</h3>
+              <p>{exampleOutcomes[tool.id]}</p>
+              <small>
+                Illustration éditoriale proposée par BestIA, pas un résultat de
+                test de l’outil.
+              </small>
+            </div>
             <p className="source-note">
               Exemple proposé par BestIA, à adapter à votre besoin et aux
               options de l’outil.
@@ -132,9 +142,9 @@ export default function ToolDetail({
             <h2>Sources et mise à jour</h2>
             <p>
               Sources officielles consultées le{" "}
-              {new Date(`${detailsCheckedAt}T12:00:00`).toLocaleDateString(
-                "fr-FR",
-              )}
+              {new Date(
+                `${detail.checkedAt || detailsCheckedAt}T12:00:00`,
+              ).toLocaleDateString("fr-FR")}
               . Les offres et les fonctionnalités peuvent évoluer.
             </p>
             <a
@@ -163,10 +173,40 @@ export default function ToolDetail({
             >
               Vérifier les conditions actuelles <ArrowUpRight size={16} />
             </a>
+            <h3>Les limites du gratuit</h3>
+            <p>{tool.practical.freeLimit}</p>
+          </section>
+          <section className="detail-panel practical-panel">
+            <h2>Langue et inscription</h2>
+            <dl>
+              <dt>Interface en français</dt>
+              <dd>{languageLabels[tool.practical.interfaceFr]}</dd>
+              <dt>Contenus ou consignes en français</dt>
+              <dd>{languageLabels[tool.practical.contentFr]}</dd>
+              <dt>Inscription</dt>
+              <dd>{accountLabels[tool.practical.account]}</dd>
+            </dl>
+            <p>{tool.practical.note}</p>
             <p className="source-note">
-              Consultez l’éditeur pour les langues disponibles, la création de
-              compte et les versions mobiles.
+              Informations consultées le{" "}
+              {new Date(
+                `${tool.practical.checkedAt}T12:00:00`,
+              ).toLocaleDateString("fr-FR")}
+              . « Non confirmé » ne signifie pas indisponible.
             </p>
+            <ul className="practical-sources">
+              {[...new Set([tool.sourceUrl, ...tool.practical.sources])].map(
+                (url, index) => (
+                  <li key={url}>
+                    <a href={url} target="_blank" rel="noopener noreferrer">
+                      {index === 0
+                        ? "Offre officielle"
+                        : `Documentation · ${new URL(url).hostname}`}
+                    </a>
+                  </li>
+                ),
+              )}
+            </ul>
           </section>
           <section className="detail-panel">
             <h2>L’avis des visiteurs</h2>

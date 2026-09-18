@@ -4,7 +4,14 @@ Un annuaire d'outils d'intelligence artificielle en français, conçu pour déco
 
 ## Fonctionnalités
 
-- Une première sélection de 30 outils avec leur présentation et un lien vers leur site officiel.
+- Une sélection de 40 outils avec leur présentation et un lien vers leur site officiel.
+- Filtres combinables « Utilisable en français » (interface ou contenus confirmés) et « Sans inscription » (au moins un usage de base confirmé sans compte). Les informations inconnues et les accès soumis à restriction régionale sont exclus du filtre concerné.
+- Fiches et comparateur enrichis : langues, inscription, limites du gratuit et sources datées. Les résultats visés des exemples sont des illustrations éditoriales, pas des résultats de tests réels.
+- Bouton « Donner mon avis » dans un bandeau en haut de toutes les pages.
+
+### Ajout des outils de septembre 2026
+
+Sur une base existante, exécuter `supabase/add-tools-2026-09.sql` dans le SQL Editor de Supabase pour autoriser les votes des dix nouveaux outils. Ce script peut être relancé et conserve les votes existants. Les nouvelles installations utilisent directement `supabase/setup.sql`.
 - Une page partageable par outil : usages, public, avantages, limites, exemple à copier, prix, sources datées et alternatives.
 - Un formulaire privé pour envoyer une suggestion, un problème ou une remarque sur BestIA, avec e-mail facultatif.
 - Des catégories pour le code, la rédaction, la vidéo, la musique, les présentations et d'autres usages.

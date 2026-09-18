@@ -27,7 +27,7 @@ test("les fiches se partagent, se rechargent et conservent les filtres au retour
     page.getByRole("heading", { name: "Outil introuvable" }),
   ).toBeVisible();
   await page.getByRole("link", { name: "Retour au catalogue" }).click();
-  await expect(page.locator(".tool-card")).toHaveCount(30);
+  await expect(page.locator(".tool-card")).toHaveCount(40);
 });
 
 test("les fiches restent lisibles à toutes les largeurs et la copie a un secours", async ({
@@ -60,7 +60,9 @@ test("un retour privé conserve son brouillon en cas d’échec puis confirme l�
   backend,
 }) => {
   await page.goto("/#/outil/claude");
-  await page.getByRole("button", { name: "Donner mon avis" }).click();
+  await page
+    .getByRole("button", { name: "Donner mon avis", exact: true })
+    .click();
   const dialog = page.getByRole("dialog");
   await dialog
     .getByLabel("Votre message")
@@ -91,7 +93,7 @@ test("un retour privé conserve son brouillon en cas d’échec puis confirme l�
   await page.keyboard.press("Escape");
   await expect(dialog).toHaveCount(0);
   await expect(
-    page.getByRole("button", { name: "Donner mon avis" }),
+    page.getByRole("button", { name: "Donner mon avis", exact: true }),
   ).toBeFocused();
 });
 
@@ -100,7 +102,9 @@ test("la validation et la limite d’envoi ne créent pas de faux succès", asyn
   backend,
 }) => {
   await page.goto("/");
-  await page.getByRole("button", { name: "Donner mon avis" }).click();
+  await page
+    .getByRole("button", { name: "Donner mon avis", exact: true })
+    .click();
   await page.getByLabel("Votre message").fill("          ");
   await page.getByRole("button", { name: "Envoyer mon retour" }).click();
   await expect(page.getByRole("alert")).toContainText("10 caractères");

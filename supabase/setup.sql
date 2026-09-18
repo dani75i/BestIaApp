@@ -13,7 +13,9 @@ insert into public.rating_tools (id) values
   ('deepseek'), ('grammarly'), ('notion-ai'), ('midjourney'), ('adobe-firefly'),
   ('leonardo'), ('ideogram'), ('canva'), ('runway'), ('pika'),
   ('synthesia'), ('heygen'), ('descript'), ('suno'), ('udio'), ('aiva'),
-  ('soundraw'), ('gamma'), ('beautiful-ai'), ('presentations-ai')
+  ('soundraw'), ('gamma'), ('beautiful-ai'), ('presentations-ai'),
+  ('deepl'), ('elevenlabs'), ('fireflies'), ('fathom'), ('notebooklm'),
+  ('photoroom'), ('remove-bg'), ('adobe-podcast'), ('microsoft-copilot'), ('quillbot')
 on conflict (id) do nothing;
 
 create table if not exists public.tool_votes (

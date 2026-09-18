@@ -9,7 +9,7 @@ test("affiche le catalogue et combine recherche, catégorie et prix", async ({
   await expect(
     page.getByRole("heading", { name: /La bonne IA/ }),
   ).toBeVisible();
-  await expect(page.locator(".tool-card")).toHaveCount(30);
+  await expect(page.locator(".tool-card")).toHaveCount(40);
   await page.getByRole("searchbox").fill("CLAUDE");
   await expect(page.locator(".tool-card")).toHaveCount(1);
   await expect(page.locator(".tool-title")).toHaveText("Claude");
@@ -20,9 +20,9 @@ test("affiche le catalogue et combine recherche, catégorie et prix", async ({
     page.getByRole("heading", { name: "Aucun outil pour cette recherche." }),
   ).toBeVisible();
   await page.getByRole("button", { name: "Réinitialiser les filtres" }).click();
-  await expect(page.locator(".tool-card")).toHaveCount(30);
+  await expect(page.locator(".tool-card")).toHaveCount(40);
   await page.getByRole("button", { name: /^Code & développement/ }).click();
-  await expect(page.locator(".tool-card")).not.toHaveCount(30);
+  await expect(page.locator(".tool-card")).not.toHaveCount(40);
   await page
     .getByRole("combobox", { name: "Filtrer par prix" })
     .selectOption("paid");
@@ -59,7 +59,7 @@ test("conserve les favoris et notes après rechargement", async ({ page }) => {
   await page
     .getByRole("button", { name: "Explorer les outils", exact: true })
     .click();
-  await expect(page.locator(".tool-card")).toHaveCount(30);
+  await expect(page.locator(".tool-card")).toHaveCount(40);
 });
 
 test("ouvre une fiche accessible et permet de supprimer sa note", async ({
@@ -95,7 +95,7 @@ test("résiste à des préférences invalides et au stockage bloqué", async ({
     localStorage.setItem("bestia.preferences.v1", "{invalide"),
   );
   await page.goto("/");
-  await expect(page.locator(".tool-card")).toHaveCount(30);
+  await expect(page.locator(".tool-card")).toHaveCount(40);
   await page.evaluate(() => {
     Storage.prototype.setItem = () => {
       throw new Error("Stockage désactivé");

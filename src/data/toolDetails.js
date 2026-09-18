@@ -1,5 +1,6 @@
 // Les exemples et les conseils sont éditoriaux ; les offres sont documentées dans tools.js.
 // Les sources officielles ont été consultées le 17 septembre 2026.
+import { additionalDetails } from "./additionalTools.js";
 export const detailsCheckedAt = "2026-09-17";
 // audience, deux usages, deux atouts, deux limites, exemple à adapter.
 const entries = {
@@ -421,9 +422,14 @@ const entries = {
     "Crée une présentation simple sur un club de lecture : à qui il s’adresse, comment se déroule une séance et comment participer.",
   ],
 };
-export const toolDetails = Object.fromEntries(
-  Object.entries(entries).map(([id, [audience, uses, pros, cons, example]]) => [
-    id,
-    { audience, uses, pros, cons, example },
-  ]),
-);
+export const toolDetails = {
+  ...Object.fromEntries(
+    Object.entries(entries).map(
+      ([id, [audience, uses, pros, cons, example]]) => [
+        id,
+        { audience, uses, pros, cons, example },
+      ],
+    ),
+  ),
+  ...additionalDetails,
+};

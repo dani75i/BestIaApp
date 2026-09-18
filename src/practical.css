@@ -1,0 +1,145 @@
+.feedback-banner {
+  background: #eee7ff;
+  border-bottom: 1px solid var(--line);
+}
+.feedback-banner > div {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 18px;
+  padding-top: 10px;
+  padding-bottom: 10px;
+}
+.feedback-banner span {
+  font-size: 13px;
+  color: #62527b;
+}
+.feedback-banner button {
+  display: flex;
+  align-items: center;
+  gap: 9px;
+  background: #7856d9;
+  color: white;
+  border: 0;
+  border-radius: 8px;
+  font-weight: 600;
+  font-size: 13px;
+  padding: 11px 16px;
+  box-shadow: 0 3px 12px #7856d92a;
+}
+.feedback-banner button:hover {
+  background: #6340c3;
+}
+.practical-filters {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 14px 22px;
+  padding: 14px 0 20px;
+}
+.practical-filters label {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  cursor: pointer;
+}
+.practical-filters input {
+  accent-color: var(--purple);
+  width: 17px;
+  height: 17px;
+}
+.practical-filters p {
+  margin: 0;
+  flex-basis: 100%;
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+.practical-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 5px;
+  margin-bottom: 12px;
+}
+.practical-badges:empty {
+  display: none;
+}
+.practical-badges span {
+  font-size: 10px;
+  border: 1px solid var(--line);
+  color: #62746c;
+  padding: 4px 7px;
+  border-radius: 6px;
+}
+.list-view .practical-badges {
+  order: 1;
+  grid-column: 1/-1;
+  margin: 0;
+}
+.practical-panel dl {
+  margin: 0;
+}
+.practical-panel dt {
+  color: var(--muted);
+  font-size: 12px;
+  margin-top: 15px;
+}
+.practical-panel dd {
+  font-size: 14px;
+  font-weight: 600;
+  margin: 5px 0 0;
+}
+.practical-sources {
+  font-size: 12px;
+  padding-left: 16px;
+}
+.practical-sources a {
+  color: var(--purple);
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+.example-outcome {
+  margin-top: 25px;
+  padding-top: 8px;
+  border-top: 1px solid var(--line);
+}
+.example-outcome small {
+  font-size: 11px;
+  color: var(--muted);
+  line-height: 1.6;
+}
+[data-theme="dark"] .feedback-banner {
+  background: #282035;
+}
+[data-theme="dark"] .feedback-banner span {
+  color: #c8bddc;
+}
+[data-theme="dark"] .practical-badges span {
+  color: #b4d0bf;
+}
+@media (max-width: 640px) {
+  .feedback-banner > div {
+    justify-content: space-between;
+    gap: 12px;
+  }
+  .feedback-banner span {
+    max-width: 130px;
+    font-size: 11px;
+  }
+  .feedback-banner button {
+    font-size: 12px;
+    padding: 10px 12px;
+  }
+  .practical-filters {
+    gap: 14px;
+  }
+}
+@media (max-width: 360px) {
+  .feedback-banner span {
+    max-width: 100px;
+  }
+  .feedback-banner button {
+    gap: 5px;
+  }
+}

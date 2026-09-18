@@ -79,7 +79,7 @@ test("une panne de lecture ne présente pas de faux zéro et préserve le catalo
 }) => {
   backend.failReads = true;
   await page.goto("/");
-  await expect(page.locator(".tool-card")).toHaveCount(30);
+  await expect(page.locator(".tool-card")).toHaveCount(40);
   await expect(
     page.getByLabel("Note moyenne de ChatGPT", { exact: true }),
   ).toContainText("Notes indisponibles");

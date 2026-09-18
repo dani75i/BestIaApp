@@ -4,6 +4,61 @@ import assert from "node:assert/strict";
 import { categories, tools } from "../src/data/tools.js";
 import { toolDetails } from "../src/data/toolDetails.js";
 import {
+  practicalInfo,
+  languageLabels,
+  accountLabels,
+} from "../src/data/practicalInfo.js";
+import { exampleOutcomes } from "../src/data/exampleOutcomes.js";
+
+test("les informations pratiques couvrent le catalogue avec des valeurs explicites", () => {
+  for (const data of [practicalInfo, exampleOutcomes])
+    assert.deepEqual(Object.keys(data).sort(), tools.map((t) => t.id).sort());
+  for (const tool of tools) {
+    const p = tool.practical;
+    assert.ok(p.interfaceFr in languageLabels, tool.id);
+    assert.ok(p.contentFr in languageLabels, tool.id);
+    assert.ok(p.account in accountLabels, tool.id);
+    assert.ok(p.freeLimit.length > 30 && p.note.length > 30, tool.id);
+    assert.ok(exampleOutcomes[tool.id].length > 30, tool.id);
+    for (const source of p.sources)
+      assert.equal(new URL(source).protocol, "https:");
+  }
+});
+
+test("les nouveaux filtres excluent les informations inconnues et se combinent aux autres", () => {
+  const options = {
+    frenchOnly: true,
+    noAccountOnly: true,
+    category: "texte",
+    pricing: "freemium",
+    favoritesOnly: true,
+    favorites: ["deepl", "quillbot", "chatgpt", "claude"],
+    query: "deepl",
+  };
+  assert.deepEqual(
+    selectTools(tools, options).map((t) => t.id),
+    ["deepl"],
+  );
+  assert.deepEqual(selectTools(tools, { ...options, category: "code" }), []);
+  const uncertain = [
+    {
+      ...tools[0],
+      practical: {
+        interfaceFr: "unknown",
+        contentFr: "unknown",
+        account: "unknown",
+      },
+    },
+  ];
+  assert.deepEqual(selectTools(uncertain, { frenchOnly: true }), []);
+  assert.deepEqual(selectTools(uncertain, { noAccountOnly: true }), []);
+  assert.ok(
+    !selectTools(tools, { noAccountOnly: true }).some(
+      (t) => t.id === "chatgpt",
+    ),
+  );
+});
+import {
   sanitizeComparison,
   readComparisonRoute,
   comparisonHref,
@@ -231,8 +286,8 @@ test("les préférences éliminent doublons, outils inconnus et notes invalides"
   });
 });
 
-test("le catalogue contient 30 outils uniques et des fiches complètes utilisables", () => {
-  assert.equal(tools.length, 30);
+test("le catalogue contient 40 outils uniques et des fiches complètes utilisables", () => {
+  assert.equal(tools.length, 40);
   assert.equal(new Set(tools.map((tool) => tool.id)).size, tools.length);
   assert.equal(new Set(tools.map((tool) => tool.name)).size, tools.length);
 

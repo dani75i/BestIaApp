@@ -27,6 +27,8 @@ import {
   PenLine,
 } from "lucide-react";
 import { categories, tools } from "./data/tools.js";
+import { usableInFrench } from "./data/practicalInfo.js";
+import "./practical.css";
 import ThemeToggle from "./ThemeToggle.jsx";
 import useVotes from "./useVotes.js";
 import ToolDetail from "./ToolDetail.jsx";
@@ -45,6 +47,10 @@ import {
 } from "./lib/catalogue.js";
 
 const categoryIcons = {
+  traduction: PenLine,
+  voix: Music2,
+  reunions: MessageCircle,
+  documents: Bookmark,
   assistants: MessageCircle,
   code: Code2,
   texte: PenLine,
@@ -205,6 +211,12 @@ function ToolCard({
         </button>
       </div>
       <p className="tool-description">{tool.description}</p>
+      <div className="practical-badges">
+        {usableInFrench(tool.practical) && <span>Usage en français</span>}
+        {tool.practical?.account === "optional" && (
+          <span>Sans compte · usage limité</span>
+        )}
+      </div>
       <div className="card-tags">
         <span className={`category-tag category-${mainCategory?.id}`}>
           <CategoryIcon size={12} />
@@ -335,6 +347,8 @@ export default function App() {
   const [query, setQuery] = useState("");
   const [category, setCategory] = useState("all");
   const [pricing, setPricing] = useState("all");
+  const [frenchOnly, setFrenchOnly] = useState(false);
+  const [noAccountOnly, setNoAccountOnly] = useState(false);
   const [sort, setSort] = useState("selection");
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [view, setView] = useState("grid");
@@ -436,6 +450,8 @@ export default function App() {
         query,
         category,
         pricing,
+        frenchOnly,
+        noAccountOnly,
         sort,
         favoritesOnly,
         ...preferences,
@@ -450,6 +466,8 @@ export default function App() {
       query,
       category,
       pricing,
+      frenchOnly,
+      noAccountOnly,
       sort,
       favoritesOnly,
       preferences,
@@ -493,6 +511,8 @@ export default function App() {
     setQuery("");
     setCategory("all");
     setPricing("all");
+    setFrenchOnly(false);
+    setNoAccountOnly(false);
     setSort("selection");
   };
   const navigate = (favorites) => {
@@ -502,7 +522,11 @@ export default function App() {
     catalogueRef.current?.scrollIntoView({ block: "start" });
   };
   const filtersActive = Boolean(
-    query || category !== "all" || pricing !== "all",
+    query ||
+    category !== "all" ||
+    pricing !== "all" ||
+    frenchOnly ||
+    noAccountOnly,
   );
 
   return (
@@ -587,6 +611,16 @@ export default function App() {
           </div>
         </div>
       </header>
+      <div className="feedback-banner">
+        <div className="page-width">
+          <span>Une idée pour améliorer BestIA ?</span>
+          <button onClick={() => setFeedbackOpen(true)}>
+            <MessageCircle size={17} />
+            Donner mon avis
+            <ArrowUpRight size={16} />
+          </button>
+        </div>
+      </div>
       <main>
         {isComparison ? (
           <Comparison
@@ -863,6 +897,33 @@ export default function App() {
                   );
                 })}
               </div>
+              <div
+                className="practical-filters"
+                role="group"
+                aria-label="Filtrer par langue et inscription"
+              >
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={frenchOnly}
+                    onChange={(event) => setFrenchOnly(event.target.checked)}
+                  />
+                  Utilisable en français
+                </label>
+                <label>
+                  <input
+                    type="checkbox"
+                    checked={noAccountOnly}
+                    onChange={(event) => setNoAccountOnly(event.target.checked)}
+                  />
+                  Sans inscription
+                </label>
+                <p>
+                  Français : interface ou contenus confirmés. Sans inscription :
+                  au moins un usage de base, avec des limites précisées dans la
+                  fiche.
+                </p>
+              </div>
               <div className="results-toolbar">
                 <div className="results-count" role="status" aria-live="polite">
                   <strong>{results.length}</strong> outil
@@ -1022,7 +1083,10 @@ export default function App() {
           <Brand small />
           <p>Un peu d’IA. Beaucoup de possibilités.</p>
         </div>
-        <button onClick={() => setFeedbackOpen(true)}>
+        <button
+          aria-label="Donner mon avis depuis le pied de page"
+          onClick={() => setFeedbackOpen(true)}
+        >
           Donner mon avis <MessageCircle size={15} />
         </button>
         <span className="footer-caption">

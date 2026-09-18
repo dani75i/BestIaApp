@@ -8,6 +8,7 @@ import {
 } from "lucide-react";
 import { toolDetails, detailsCheckedAt } from "./data/toolDetails.js";
 import { pricingLabels } from "./lib/catalogue.js";
+import { languageLabels, accountLabels } from "./data/practicalInfo.js";
 import { comparisonHref } from "./lib/comparison.js";
 import { CopyButton } from "./ToolDetail.jsx";
 import "./comparison.css";
@@ -116,6 +117,24 @@ export default function Comparison({
     ],
     ["Pour qui ?", (tool) => toolDetails[tool.id].audience],
     [
+      "Interface en français",
+      (tool) => languageLabels[tool.practical.interfaceFr],
+    ],
+    [
+      "Contenus ou consignes en français",
+      (tool) => languageLabels[tool.practical.contentFr],
+    ],
+    [
+      "Inscription",
+      (tool) => (
+        <>
+          <strong>{accountLabels[tool.practical.account]}</strong>
+          <p>{tool.practical.note}</p>
+        </>
+      ),
+    ],
+    ["Limites du gratuit", (tool) => tool.practical.freeLimit],
+    [
       "Prix et limites de l’offre",
       (tool) => (
         <>
@@ -178,9 +197,9 @@ export default function Comparison({
           </a>
           <p>
             Consultée le{" "}
-            {new Date(`${detailsCheckedAt}T12:00:00`).toLocaleDateString(
-              "fr-FR",
-            )}
+            {new Date(
+              `${toolDetails[tool.id].checkedAt || detailsCheckedAt}T12:00:00`,
+            ).toLocaleDateString("fr-FR")}
           </p>
         </>
       ),

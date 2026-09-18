@@ -1,3 +1,4 @@
+import { usableInFrench } from "../data/practicalInfo.js";
 export const pricingLabels = {
   free: "Gratuit",
   freemium: "Freemium",
@@ -17,6 +18,8 @@ export function selectTools(
     query = "",
     category = "all",
     pricing = "all",
+    frenchOnly = false,
+    noAccountOnly = false,
     favoritesOnly = false,
     favorites = [],
     sort = "selection",
@@ -38,6 +41,8 @@ export function selectTools(
       words.every((word) => haystack.includes(word)) &&
       (category === "all" || tool.categoryIds.includes(category)) &&
       (pricing === "all" || tool.pricing === pricing) &&
+      (!frenchOnly || usableInFrench(tool.practical)) &&
+      (!noAccountOnly || tool.practical?.account === "optional") &&
       (!favoritesOnly || favorites.includes(tool.id))
     );
   });
