@@ -1,12 +1,12 @@
 import { useEffect, useState } from "react";
 
-const readRoute = () =>
-  location.hash.startsWith("#/outil/") ? location.hash.slice(8) : null;
 export default function useToolRoute(tools) {
-  const [id, setId] = useState(readRoute);
+  const [hash, setHash] = useState(() => location.hash);
+  const id = hash.startsWith("#/outil/") ? hash.slice(8) : null;
+  const isComparison = hash.split("?")[0] === "#/comparer";
   const selectedTool = tools.find((tool) => tool.id === id) || null;
   useEffect(() => {
-    const change = () => setId(readRoute());
+    const change = () => setHash(location.hash);
     window.addEventListener("hashchange", change);
     return () => window.removeEventListener("hashchange", change);
   }, []);
@@ -14,13 +14,19 @@ export default function useToolRoute(tools) {
     document.title =
       id !== null
         ? `${selectedTool?.name || "Outil introuvable"} : avis et usages | BestIA`
-        : "BestIA — Trouvez la bonne intelligence artificielle";
-    if (id !== null) {
+        : isComparison
+          ? "Comparer les IA | BestIA"
+          : "BestIA — Trouvez la bonne intelligence artificielle";
+    if (id !== null || isComparison) {
       window.scrollTo({ top: 0, behavior: "instant" });
-      document.getElementById("detail-title")?.focus({ preventScroll: true });
+      document
+        .getElementById(isComparison ? "comparison-title" : "detail-title")
+        ?.focus({ preventScroll: true });
     }
-  }, [id, selectedTool]);
+  }, [id, selectedTool, isComparison]);
   return {
+    hash,
+    isComparison,
     selectedTool,
     isDetail: id !== null,
     openTool: (tool) => {

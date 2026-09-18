@@ -71,6 +71,12 @@ Un déploiement conserve les retours, comme les votes. Aucun e-mail automatique 
 
 ## Pages des outils
 
+### Comparer les outils
+
+Le bouton **Comparer** des cartes et des fiches permet de sélectionner 2 à 3 outils. La barre en bas ouvre un tableau avec usages, public, prix, notes et nombre de votes, avantages, limites et sources. Depuis ce tableau, on peut ajouter, remplacer ou retirer un outil et gérer ses favoris. Les critères et en-têtes restent fixes dans la zone de défilement, également sur smartphone et en mode sombre.
+
+Le lien **Partager la comparaison** encode la sélection et son ordre, par exemple `#/comparer?outils=chatgpt,claude`. Il fonctionne directement sur GitHub Pages et sur un autre appareil. La dernière sélection est conservée dans ce navigateur ; un lien partagé prend priorité sur elle. Aucune nouvelle table ni configuration Supabase n’est nécessaire. Les informations proviennent des fiches existantes et les notes de la moyenne publique.
+
 Les adresses utilisent `#/outil/identifiant`, par exemple [la fiche de Claude](https://dani75i.github.io/BestIaApp/#/outil/claude). Elles se partagent et se rechargent directement sur GitHub Pages. Le catalogue est dans `src/data/tools.js` et le contenu éditorial des fiches dans `src/data/toolDetails.js`. Lors d’un ajout, compléter les deux fichiers et la table `rating_tools`.
 
 ## Déploiement gratuit et automatique

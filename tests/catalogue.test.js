@@ -3,6 +3,35 @@ import { existsSync } from "node:fs";
 import assert from "node:assert/strict";
 import { categories, tools } from "../src/data/tools.js";
 import { toolDetails } from "../src/data/toolDetails.js";
+import {
+  sanitizeComparison,
+  readComparisonRoute,
+  comparisonHref,
+} from "../src/lib/comparison.js";
+
+test("les liens de comparaison éliminent les doublons et les outils inconnus et respectent la limite", () => {
+  assert.deepEqual(sanitizeComparison(null, tools), []);
+  assert.deepEqual(
+    sanitizeComparison(
+      ["claude", "claude", "inconnu", "chatgpt", "gemini", "perplexity"],
+      tools,
+    ),
+    ["claude", "chatgpt", "gemini"],
+  );
+  assert.equal(readComparisonRoute("#/outil/claude", tools), null);
+  assert.deepEqual(
+    readComparisonRoute("#/comparer?outils=claude%2Cchatgpt", tools),
+    ["claude", "chatgpt"],
+  );
+  assert.deepEqual(
+    readComparisonRoute("#/comparer?outils=%E0%A4%A", tools),
+    [],
+  );
+  assert.equal(
+    comparisonHref(["claude", "chatgpt"]),
+    "#/comparer?outils=claude,chatgpt",
+  );
+});
 import { selectTools, sanitizePreferences } from "../src/lib/catalogue.js";
 
 const examples = [
@@ -62,12 +91,19 @@ const selectedIds = (options) =>
   selectTools(examples, options).map((tool) => tool.id);
 
 test("chaque outil possède une fiche complète avec un exemple distinct", () => {
-  assert.deepEqual(Object.keys(toolDetails).sort(), tools.map(t => t.id).sort());
-  assert.equal(new Set(Object.values(toolDetails).map(d => d.example)).size, tools.length);
+  assert.deepEqual(
+    Object.keys(toolDetails).sort(),
+    tools.map((t) => t.id).sort(),
+  );
+  assert.equal(
+    new Set(Object.values(toolDetails).map((d) => d.example)).size,
+    tools.length,
+  );
   for (const tool of tools) {
     const detail = toolDetails[tool.id];
     assert.ok(detail.audience.length > 20);
-    for (const field of ["uses", "pros", "cons"]) assert.ok(detail[field].length >= 2);
+    for (const field of ["uses", "pros", "cons"])
+      assert.ok(detail[field].length >= 2);
     assert.equal(new URL(tool.sourceUrl).protocol, "https:");
   }
 });

@@ -5,7 +5,7 @@ import { toolDetails, detailsCheckedAt } from "./data/toolDetails.js";
 import { pricingLabels } from "./lib/catalogue.js";
 import "./details.css";
 
-function CopyButton({ value, children }) {
+export function CopyButton({ value, children }) {
   const [state, setState] = useState("");
   async function copy() {
     try {

@@ -8,6 +8,7 @@ import {
   Check,
   ChevronDown,
   Code2,
+  Columns3,
   ExternalLink,
   Heart,
   Image,
@@ -31,6 +32,12 @@ import useVotes from "./useVotes.js";
 import ToolDetail from "./ToolDetail.jsx";
 import FeedbackForm from "./FeedbackForm.jsx";
 import useToolRoute from "./useToolRoute.js";
+import Comparison, { CompareButton, ComparisonTray } from "./Comparison.jsx";
+import {
+  sanitizeComparison,
+  readComparisonRoute,
+  comparisonHref,
+} from "./lib/comparison.js";
 import {
   pricingLabels,
   sanitizePreferences,
@@ -165,6 +172,7 @@ function ToolCard({
   onFavorite,
   onRate,
   onOpen,
+  comparison,
 }) {
   const mainCategory = categories.find(
     (category) => category.id === tool.categoryIds[0],
@@ -228,6 +236,7 @@ function ToolCard({
           <ArrowUpRight size={18} />
         </a>
       </div>
+      {comparison}
     </article>
   );
 }
@@ -329,7 +338,54 @@ export default function App() {
   const [sort, setSort] = useState("selection");
   const [favoritesOnly, setFavoritesOnly] = useState(false);
   const [view, setView] = useState("grid");
-  const { selectedTool, isDetail, openTool } = useToolRoute(tools);
+  const { selectedTool, isDetail, isComparison, hash, openTool } =
+    useToolRoute(tools);
+  const [savedComparison, setSavedComparison] = useState(() => {
+    try {
+      return sanitizeComparison(
+        JSON.parse(localStorage.getItem("bestia.comparison.v1")),
+        tools,
+      );
+    } catch {
+      return [];
+    }
+  });
+  const comparedIds = readComparisonRoute(hash, tools) ?? savedComparison;
+  const comparedTools = comparedIds.map((id) =>
+    tools.find((tool) => tool.id === id),
+  );
+  useEffect(() => {
+    const fromRoute = readComparisonRoute(hash, tools);
+    if (fromRoute) setSavedComparison(fromRoute);
+  }, [hash]);
+  useEffect(() => {
+    try {
+      localStorage.setItem(
+        "bestia.comparison.v1",
+        JSON.stringify(savedComparison),
+      );
+    } catch {
+      /* La sélection reste utilisable en mémoire et dans le lien partagé. */
+    }
+  }, [savedComparison]);
+  const changeComparison = (ids) => {
+    const next = sanitizeComparison(ids, tools);
+    setSavedComparison(next);
+    if (isComparison) location.hash = comparisonHref(next);
+  };
+  const toggleComparison = (id) => {
+    if (comparedIds.includes(id))
+      changeComparison(comparedIds.filter((value) => value !== id));
+    else if (comparedIds.length < 3) changeComparison([...comparedIds, id]);
+  };
+  const comparisonButton = (tool) => (
+    <CompareButton
+      tool={tool}
+      selected={comparedIds.includes(tool.id)}
+      full={comparedIds.length >= 3}
+      onToggle={toggleComparison}
+    />
+  );
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [aboutOpen, setAboutOpen] = useState(false);
   const [toast, setToast] = useState("");
@@ -440,7 +496,7 @@ export default function App() {
     setSort("selection");
   };
   const navigate = (favorites) => {
-    if (isDetail) location.hash = "/";
+    if (isDetail || isComparison) location.hash = "/";
     setFavoritesOnly(favorites);
     resetFilters();
     catalogueRef.current?.scrollIntoView({ block: "start" });
@@ -453,15 +509,25 @@ export default function App() {
     <>
       <a
         className="skip-link"
-        href={isDetail ? "#detail-title" : "#catalogue"}
+        href={
+          isComparison
+            ? "#comparison-title"
+            : isDetail
+              ? "#detail-title"
+              : "#catalogue"
+        }
         onClick={(event) => {
-          if (isDetail) {
+          if (isDetail || isComparison) {
             event.preventDefault();
-            document.getElementById("detail-title")?.focus();
+            document
+              .getElementById(
+                isComparison ? "comparison-title" : "detail-title",
+              )
+              ?.focus();
           }
         }}
       >
-        Aller au catalogue
+        Aller au contenu
       </a>
       <header className="site-header">
         <div className="header-inner">
@@ -495,6 +561,16 @@ export default function App() {
             </button>
           </nav>
           <div className="header-actions">
+            <a
+              className="header-compare"
+              href={comparisonHref(comparedIds)}
+              aria-label={`Ouvrir le comparateur (${comparedIds.length} outils)`}
+              aria-current={isComparison ? "page" : undefined}
+              title="Comparer des outils"
+            >
+              <Columns3 size={18} />
+              <span>{comparedIds.length}</span>
+            </a>
             <ThemeToggle />
             <button
               className={`header-favorites ${favoritesOnly ? "selected" : ""}`}
@@ -512,7 +588,25 @@ export default function App() {
         </div>
       </header>
       <main>
-        {isDetail ? (
+        {isComparison ? (
+          <Comparison
+            selected={comparedTools}
+            tools={tools}
+            onChange={changeComparison}
+            favorites={preferences.favorites}
+            onFavorite={toggleFavorite}
+            renderLogo={(tool) => <ToolLogo tool={tool} />}
+            renderRating={(tool) => (
+              <CommunityRating
+                tool={tool}
+                summary={votes.averages[tool.id]}
+                status={votes.status}
+              />
+            )}
+            voteStatus={votes.status}
+            onRetry={votes.refresh}
+          />
+        ) : isDetail ? (
           selectedTool ? (
             <ToolDetail
               key={selectedTool.id}
@@ -521,7 +615,7 @@ export default function App() {
               logo={<ToolLogo tool={selectedTool} large />}
               actions={
                 <>
-                  {" "}
+                  {comparisonButton(selectedTool)}{" "}
                   <div className="detail-actions">
                     <a
                       className="primary-button"
@@ -855,6 +949,7 @@ export default function App() {
                       onFavorite={toggleFavorite}
                       onRate={rateTool}
                       onOpen={openTool}
+                      comparison={comparisonButton(tool)}
                     />
                   ))}
                 </div>
@@ -938,6 +1033,9 @@ export default function App() {
           <ArrowUpRight size={13} />
         </button>
       </footer>
+      {!isComparison && (
+        <ComparisonTray selected={comparedTools} onChange={changeComparison} />
+      )}
       <div
         className={`toast ${toast ? "visible" : ""}`}
         role="status"
